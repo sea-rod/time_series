@@ -1,11 +1,8 @@
 import streamlit as st
-import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
-import tensorflow as tf
-from utils import prediction_vs_actual, load_data, load_model
+import pandas as pd
+from utils import load_data, load_model
 from sklearn.preprocessing import MinMaxScaler
-from datetime import datetime
 
 
 def feature_engineering(data, timestamp=100):
@@ -27,21 +24,28 @@ ticker = st.selectbox(
     ],
 )
 
-days = st.sidebar.slider("days",min_value=0,max_value=30)
+days = st.sidebar.slider("days", min_value=0, max_value=30)
 
+data = data[[f"{ticker}"]].dropna()
 scaler = MinMaxScaler(feature_range=(0, 1))
-y_ = scaler.fit_transform(data[[f"{ticker}"]].dropna())
-x, y = feature_engineering(y_)
+df = scaler.fit_transform(data)
+x, y = feature_engineering(df)
 y_pred = model.predict(x)
 
 for i in range(days):
-    yp = model.predict(y_[-100:].reshape(-1, 100, 1))
-    y_ = np.vstack((y_, yp))
+    yp = model.predict(df[-100:].reshape(-1, 100, 1))
+    df = np.vstack((df, yp))
     y_pred = np.vstack((y_pred, yp))
 
-# x = scaler.inverse_transform(x)
 y = scaler.inverse_transform(y)
 y_pred = scaler.inverse_transform(y_pred)
 
 y = np.vstack((y, np.full((days, 1), np.nan)))
-st.line_chart(np.hstack((y_pred, y)))
+new_dates = pd.date_range(data.index[-1] + pd.Timedelta(days=1), periods=days)
+
+pred_vs_actual = pd.DataFrame(
+    np.hstack((y_pred, y)),
+    columns=["predicted", "actual"],
+    index=data.index.append(new_dates)[100:]
+)
+st.line_chart(pred_vs_actual, color=("#33daff", "#ff5733"))

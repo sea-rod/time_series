@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from utils import load_data
 
 
-def bollinger_band(data,stock_column):
+def bollinger_band(data, stock_column):
     # Bollinger Bands
     if stock_column in data.columns:
         st.subheader(f"Bollinger Bands for {selected_stock}")
@@ -36,7 +36,6 @@ def RSI_graph(df, stock_column):
         rs = gain / loss
         df["RSI"] = 100 - (100 / (1 + rs))
         st.line_chart(df["RSI"], height=300, use_container_width=True)
-        st.caption("RSI: Overbought > 70, Oversold < 30")
 
 
 data = load_data()
@@ -50,4 +49,4 @@ selected_stock = st.selectbox(
 stock_column = f"Adj Close_{selected_stock}"
 
 df = bollinger_band(data, stock_column)
-RSI_graph(df,stock_column)
+RSI_graph(df, stock_column)
